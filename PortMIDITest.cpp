@@ -46,8 +46,7 @@ struct mainData // P: typ trzymaj¹cy g³ówne parametry przesy³ane do generateSign
 {
 	synthParameters parameters;
 	multiChFloat signal;
-	voice voices[3];
-	//mainData(synthParameters, multiChFloat*, voice(*)[3]);
+	voice voices[NUM_OF_VOICES];
 };
 
 
@@ -64,13 +63,7 @@ int main(int argc, char *argv[]) {
 	int i;
 
 	// P: wprowadzenie parametrów syntezatora
-	//voice xMasVoice[NUM_OF_VOICES];
-	//synthParameters xMasParameters; // P: parametry dla wybranego syntezatora; tutaj xMasSynth ;)
-	//multiChFloat xMasSignal; // P: wielo-voice'owy sygna³ dla wybranego syntezatora
-	mainData xMasSynth; // P: parametry xMasSyth'a; paczka dla generateSignal 
-	//xMasSynth.parameters = xMasParameters;
-	//*xMasSynth.voices = &xMasVoice;
-	//xMasSynth.signal = xMasSignal;
+	mainData xMasSynth; // P: parametry xMasSyth'a ;) - paczka parametrów dla generateSignal 
 	// deklaracje dla PortMIDI
 	PmStream * midiStream;
 	PmEvent MIDIbuffer[1];
