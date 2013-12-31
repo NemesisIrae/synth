@@ -11,13 +11,6 @@ using namespace std;
 	#define M_PI  (3.14159265)
 #endif
 
-// parametry odpowiadaj¹ce za brzmienie
-float attack_time = 100; // czas ataku [ms]
-float release_time = 1000; // czas release [ms]
-float sinus_mix = 0;
-float sawtooth_mix = 1;
-float square_mix = 0;
-
 // ------ definicje i deklaracje do PortAudio
 static int generateSignal(const void *inputBuffer, void *outputBuffer,
 	unsigned long framesPerBuffer,
@@ -25,6 +18,12 @@ static int generateSignal(const void *inputBuffer, void *outputBuffer,
 	PaStreamCallbackFlags statusFlags,
 	void *userData);
 const unsigned short NUM_OF_VOICES = 3;
+typedef float multiChFloat[NUM_OF_VOICES];
+const unsigned short TABLE_SIZE = 44100;
+float sinus[TABLE_SIZE];
+float sawtooth[TABLE_SIZE];
+float square[TABLE_SIZE];
+
 struct voice
 {
 	int noteNumber;
@@ -33,13 +32,24 @@ struct voice
 	bool isPlayed;
 	int phase = 0;
 };
-voice voices[NUM_OF_VOICES];
-typedef float multiChFloat[NUM_OF_VOICES];
-multiChFloat signal;
-const unsigned short TABLE_SIZE = 44100;
-float sinus[TABLE_SIZE];
-float sawtooth[TABLE_SIZE];
-float square[TABLE_SIZE];
+struct synthParameters //P: typ trzymaj¹cy parametry syntezatora
+{
+	// parametry odpowiadaj¹ce za brzmienie
+	float attack_time = 100; // czas ataku [ms]
+	float release_time = 1000; // czas release [ms]
+	float sinus_mix = 0;
+	float sawtooth_mix = 1;
+	float square_mix = 0;
+};
+
+struct mainData // P: typ trzymaj¹cy g³ówne parametry przesy³ane do generateSignal
+{
+	synthParameters parameters;
+	multiChFloat signal;
+	voice voices[3];
+	//mainData(synthParameters, multiChFloat*, voice(*)[3]);
+};
+
 
 // ------ definicje i deklaracje do PortMIDI
 #define INPUT_BUFFER_SIZE 100
@@ -53,6 +63,14 @@ PmStream * prepareMIDI(int i);
 int main(int argc, char *argv[]) {
 	int i;
 
+	// P: wprowadzenie parametrów syntezatora
+	//voice xMasVoice[NUM_OF_VOICES];
+	//synthParameters xMasParameters; // P: parametry dla wybranego syntezatora; tutaj xMasSynth ;)
+	//multiChFloat xMasSignal; // P: wielo-voice'owy sygna³ dla wybranego syntezatora
+	mainData xMasSynth; // P: parametry xMasSyth'a; paczka dla generateSignal 
+	//xMasSynth.parameters = xMasParameters;
+	//*xMasSynth.voices = &xMasVoice;
+	//xMasSynth.signal = xMasSignal;
 	// deklaracje dla PortMIDI
 	PmStream * midiStream;
 	PmEvent MIDIbuffer[1];
@@ -80,12 +98,12 @@ int main(int argc, char *argv[]) {
 						44100,
 						1,
 						generateSignal,
-						&signal);
+						&xMasSynth);
 	Pa_StartStream(audioStream);
 	// wycisz wszystkie g³osy
 	for (i = 0; i < NUM_OF_VOICES; i++) {
-		voices[i].gain = 0;
-		voices[i].isPlayed = 0;
+		xMasSynth.voices[i].gain = 0;
+		xMasSynth.voices[i].isPlayed = 0;
 	}
 	// przygotowanie tabel z ró¿nymi sygna³ami
 	for (i = 0; i < TABLE_SIZE; i++) {
@@ -108,28 +126,28 @@ int main(int argc, char *argv[]) {
 			if (Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_ON) {
 				// wybierz pierwszy wolny g³os (dla którego gain == 0)
 				i = 0;
-				while (voices[i].isPlayed != 0) {
+				while (xMasSynth.voices[i].isPlayed != 0) {
 					i++;
 				}
 				// jeœli wszystkie zajête, kradniemy pierwszy g³os
 				if (i == NUM_OF_VOICES) 
 					i = 0;
 				// do wybranego g³osu przypisujemy wartoœci wziête z komunikatu MIDI
-				voices[i].frequency = pow(2, double(noteNumber - 69.0f) / 12.0f) * 440.0f;
-				cout << "   frequency: " << voices[i].frequency << endl;
-				voices[i].isPlayed = 1;
-				voices[i].noteNumber = noteNumber;
+				xMasSynth.voices[i].frequency = pow(2, double(noteNumber - 69.0f) / 12.0f) * 440.0f;
+				cout << "   frequency: " << xMasSynth.voices[i].frequency << endl;
+				xMasSynth.voices[i].isPlayed = 1;
+				xMasSynth.voices[i].noteNumber = noteNumber;
 			}
 			// jeœli nie jest uderzona to sprawdŸ czy jest puszczona
 			else if (Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_OFF) {
 				// znajdŸ g³os, którego noteNumber jest taki sam jak w³aœnie puszczony klawisz
 				i = 0;
-				while ((voices[i].noteNumber != noteNumber) && i<NUM_OF_VOICES) {
+				while ((xMasSynth.voices[i].noteNumber != noteNumber) && i<NUM_OF_VOICES) {
 					i++;
 				}
 				// jeœli ten g³os jest akurat grany, wycisz go
 				if (i < NUM_OF_VOICES) {
-					voices[i].isPlayed = 0;
+					xMasSynth.voices[i].isPlayed = 0;
 				}
 			}
 		}
@@ -167,7 +185,7 @@ static int generateSignal(const void *inputBuffer, void *outputBuffer,
 	void *userData)
 {
 	// funkcja generuje sygna³ i przekazuje go do bufora wyjœciowego
-	multiChFloat* signal = (multiChFloat*)userData;
+	mainData* synthData = (mainData*)userData;
 	float *out = (float*)outputBuffer;
 	//--------------
 	unsigned int i, j, q;
@@ -179,14 +197,14 @@ static int generateSignal(const void *inputBuffer, void *outputBuffer,
 			for (q = 0; q < NUM_OF_VOICES; q++) {
 				// zaktualizuj gain kolejnego g³osu
 				// attack
-				if (voices[q].isPlayed && (voices[q].gain < 1))
-					voices[q].gain += 1 / (attack_time*44.100f);
+				if ((*synthData).voices[q].isPlayed && ((*synthData).voices[q].gain < 1))
+					(*synthData).voices[q].gain += 1 / ((*synthData).parameters.attack_time*44.100f);
 				// release
-				if (!voices[q].isPlayed && (voices[q].gain > 0))
-					voices[q].gain -= 1 / (release_time*44.100f);
+				if (!(*synthData).voices[q].isPlayed && ((*synthData).voices[q].gain > 0))
+					(*synthData).voices[q].gain -= 1 / ((*synthData).parameters.release_time*44.100f);
 				
 				// do wartoœci próbki w buforze wyjœciowym dodaj wartoœæ próbki sygna³u generowanego przez q-ty g³os
-				*out = *out + *signal[q]*voices[q].gain;
+				*out = *out + (*synthData).signal[q] * (*synthData).voices[q].gain;
 			}
 			// przesuñ wskaŸnik na kolejn¹ próbkê w buforze wyjœciowym
 			out++;
@@ -194,13 +212,15 @@ static int generateSignal(const void *inputBuffer, void *outputBuffer,
 
 		for (q = 0; q < NUM_OF_VOICES; q++) {
 			// oblicz deltê (czyli jak du¿y jest krok pomiêdzy odczytywanymi próbkami z tabeli - im wiêkszy tym wiêksza czêstotliwoœæ)
-			delta[q] = voices[q].frequency;
+			delta[q] = (*synthData).voices[q].frequency;
 			// zaktualizuj sygna³ generowany przez kolejny g³os o zmiksowane sygna³y z generatorów sinusa, pi³y i prostok¹ta
-			*signal[q] = (sinus_mix*sinus[voices[q].phase] + sawtooth_mix*sawtooth[voices[q].phase] + square_mix*square[voices[q].phase]) / 4;
+			(*synthData).signal[q] = ((*synthData).parameters.sinus_mix*sinus[(*synthData).voices[q].phase] +
+									  (*synthData).parameters.sawtooth_mix*sawtooth[(*synthData).voices[q].phase] +
+									  (*synthData).parameters.square_mix*square[(*synthData).voices[q].phase]) / 4;
 			
-			voices[q].phase += delta[q];
-			if (voices[q].phase > TABLE_SIZE)
-				voices[q].phase = 0;
+			(*synthData).voices[q].phase += delta[q];
+			if ((*synthData).voices[q].phase > TABLE_SIZE)
+				(*synthData).voices[q].phase = 0;
 		}
 	}
 	return 0;
