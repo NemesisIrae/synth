@@ -66,18 +66,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\PortMIDITest.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\portaudio.h" />
     <ClInclude Include="..\..\portmidi.h" />
     <ClInclude Include="..\..\porttime.h" />
+    <ClInclude Include="PortMIDITest.h" />
+    <ClInclude Include="SynthData.h" />
+    <ClInclude Include="WavetableGenerators.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\portaudio_x86.dll" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\portaudio_x86.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="PortMIDITest.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -15,11 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\PortMIDITest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\..\portaudio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -27,6 +22,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\porttime.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PortMIDITest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SynthData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WavetableGenerators.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -39,5 +43,10 @@
     <Library Include="..\..\portaudio_x86.lib">
       <Filter>Resource Files</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="PortMIDITest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
