@@ -63,8 +63,8 @@ int main(int argc, char *argv[]) {
 			noteNumber = Pm_MessageData1(MIDIbuffer[0].message);
 			cout << "Message status: " << Pm_MessageStatus(MIDIbuffer[0].message) << ", note number: " << Pm_MessageData1(MIDIbuffer[0].message) << endl;
 			// sprawdŸ czy jest to nuta uderzona
-			if (Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_ON) {
-				// wybierz pierwszy wolny g³os (dla którego gain == 0)
+			if ((Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_ON) && Pm_MessageData2(MIDIbuffer[0].message)) {
+				// wybierz pierwszy wolny g³os
 				i = 0;
 				while (xMasSynth.voice[i].isPlayed != 0) {
 					i++;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 				xMasSynth.voice[i].noteNumber = noteNumber;
 			}
 			// jeœli nie jest uderzona to sprawdŸ czy jest puszczona
-			else if (Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_OFF) {
+			else if ((Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_OFF) || !Pm_MessageData2(MIDIbuffer[0].message)) {
 				// znajdŸ g³os, którego noteNumber jest taki sam jak w³aœnie puszczony klawisz
 				i = 0;
 				while ((xMasSynth.voice[i].noteNumber != noteNumber) && i<NUM_OF_VOICES) {
