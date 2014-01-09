@@ -1,3 +1,5 @@
+// ZMIANY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 #define NUM_OF_VOICES 3
 class synthData
 {
