@@ -5,7 +5,9 @@
 #include <iostream>
 #include "portaudio.h"
 #include "SynthData.h"
-#include "WavetableGenerators.h"
+#include "windows.h"
+#include <stdlib.h>
+
 using namespace std;
 
 // ------ definicje i deklaracje do PortAudio
@@ -22,4 +24,9 @@ static int generateSignal(const void *inputBuffer, void *outputBuffer,
 #define TIME_INFO NULL
 #define NOTE_ON 0x90
 #define NOTE_OFF 0x80
-PmStream * prepareMIDI(int i);
+PmStream * prepareMIDI();
+int chooseMIDIDevice();
+PaStream* prepareAudio(synthData &synth);
+
+bool isNoteOn(PmMessage msg);
+bool isNoteOff(PmMessage msg);

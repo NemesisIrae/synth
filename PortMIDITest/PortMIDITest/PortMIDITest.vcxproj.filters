@@ -48,5 +48,11 @@
     <ClCompile Include="PortMIDITest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="WavetableGenerators.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SynthData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

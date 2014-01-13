@@ -1,113 +1,66 @@
 #include "PortMIDITest.h"
-float sinus[TABLE_SIZE];
-float sawtooth[TABLE_SIZE];
-float square[TABLE_SIZE];
-int main(int argc, char *argv[]) {
-	int i;
-	//float* sawtooth[TABLE_SIZE];
-	//float* square[TABLE_SIZE];
-	GenerateSineTable(sinus);
-	GenerateSawtoothTable(sawtooth);
-	GenerateSquareTable(square);
-	//GenerateSawtoothTable(*sawtooth);
-	//GenerateSquareTable(*square);
-	// P: wprowadzenie parametrów syntezatora
-	synthData xMasSynth; // P: parametry xMasSyth'a ;) - paczka parametrów dla generateSignal 
-	xMasSynth.mix.sin = 1;
-	// deklaracje dla PortMIDI
+
+int main() {
+	synthData xMasSynth;
 	PmStream * midiStream;
 	PmEvent MIDIbuffer[1];
-	int noteNumber;
+	int note_number, velocity;
 
-	// wybór urz¹dzenia MIDI
-	for (i = 0; i < Pm_CountDevices(); i++) 
-	{
-		const PmDeviceInfo *info = Pm_GetDeviceInfo(i);
-		if (info->input) 
-		{
-			cout << i << ". - " << info->interf << " - " << info->name << "\n";
-		}
-	}
-	cout << "Wybierz urz¹dzenie MIDI: ";
-	cin >> i;
+	// ustawienie parametrów syntezatora
+	xMasSynth.setOscMixGain(.4, .1, .2);
+	xMasSynth.setADRSParams(100, 1000);
+	xMasSynth.setFMModulationParams(0, 4);
 
 	// przygotowanie urz¹dzenia MIDI
-	midiStream = prepareMIDI(i);
+	midiStream = prepareMIDI();
+
 	// przygotowanie urz¹dzenia audio
-	PaStream *audioStream;
-	Pa_Initialize();
-	Pa_OpenDefaultStream(&audioStream,
-						0,
-						2,
-						paFloat32,
-						44100,
-						128,
-						generateSignal,
-						&xMasSynth);
-	Pa_StartStream(audioStream);
-	// wycisz wszystkie g³osy
-	for (i = 0; i < NUM_OF_VOICES; i++) {
-		xMasSynth.voice[i].gain = 0;
-		xMasSynth.voice[i].isPlayed = 0;
-	}
+	PaStream *audioStream = prepareAudio(xMasSynth);
 
 	// g³ówna pêtla 
 	while (1) {
-		if (_kbhit()) 
+		if (_kbhit())
 			// jeœli zosta³ wciœniêty jakikolwiek klawisz na klawiaturze komputerowej - przerwij zabawê
 			break;
 		if (Pm_Poll(midiStream)) {
 			// odczytaj komunikat MIDI
 			Pm_Read(midiStream, MIDIbuffer, 1);
 			// zczytaj z tego komunikatu numer nuty MIDI
-			noteNumber = Pm_MessageData1(MIDIbuffer[0].message);
-			cout << "Message status: " << Pm_MessageStatus(MIDIbuffer[0].message) << ", note number: " << Pm_MessageData1(MIDIbuffer[0].message) << endl;
+			note_number = Pm_MessageData1(MIDIbuffer[0].message);
+			velocity = Pm_MessageData2(MIDIbuffer[0].message);
+			// cout << "Message status: " << Pm_MessageStatus(MIDIbuffer[0].message) << ", note number: " << Pm_MessageData1(MIDIbuffer[0].message) << endl;
 			// sprawdŸ czy jest to nuta uderzona
-			if ((Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_ON) && Pm_MessageData2(MIDIbuffer[0].message)) {
-				// wybierz pierwszy wolny g³os
-				i = 0;
-				while (xMasSynth.voice[i].isPlayed != 0) {
-					i++;
-				}
-				// jeœli wszystkie zajête, kradniemy pierwszy g³os
-				if (i == NUM_OF_VOICES) 
-					i = 0;
-				// do wybranego g³osu przypisujemy wartoœci wziête z komunikatu MIDI
-				xMasSynth.voice[i].frequency = pow(2, double(noteNumber - 69.0f) / 12.0f) * 440.0f;
-				cout << "   frequency: " << xMasSynth.voice[i].frequency << endl;
-				xMasSynth.voice[i].isPlayed = 1;
-				xMasSynth.voice[i].noteNumber = noteNumber;
+			if (isNoteOn(MIDIbuffer[0].message)) {
+				// w³¹cz g³os i przeka¿ mu numer dŸwiêku MIDI 
+				xMasSynth.setVoiceOn(note_number, velocity);
 			}
 			// jeœli nie jest uderzona to sprawdŸ czy jest puszczona
-			else if ((Pm_MessageStatus(MIDIbuffer[0].message) == NOTE_OFF) || !Pm_MessageData2(MIDIbuffer[0].message)) {
-				// znajdŸ g³os, którego noteNumber jest taki sam jak w³aœnie puszczony klawisz
-				i = 0;
-				while ((xMasSynth.voice[i].noteNumber != noteNumber) && i<NUM_OF_VOICES) {
-					i++;
-				}
-				// jeœli ten g³os jest akurat grany, wycisz go
-				if (i < NUM_OF_VOICES) {
-					xMasSynth.voice[i].isPlayed = 0;
-				}
+			else if (isNoteOff(MIDIbuffer[0].message)) {
+				// wy³¹cz g³os, który gra t¹ nutê
+				xMasSynth.setVoiceOff(note_number);
 			}
 		}
 	}
-	Pa_StopStream(audioStream);
 	// zamkniêcie urz¹dzenia MIDI
 	Pm_Close(midiStream);
+
 	// zamkniêcie urz¹dzenia Audio
+	Pa_StopStream(audioStream);
 	Pa_CloseStream(audioStream);
 	Pa_Terminate();
-
 	return 0;
 }
-PmStream* prepareMIDI(int i) {
+
+PmStream* prepareMIDI() {
+
+	int device_number = chooseMIDIDevice();
+
 	PmEvent MIDIbuffer[1];
-	PmStream* midiStream;
+	PmStream* midiStream = 0;
 
 	Pt_Start(1, 0, 0);
 	Pm_OpenInput(&midiStream,
-				i,
+				device_number,
 				DRIVER_INFO,
 				INPUT_BUFFER_SIZE,
 				TIME_PROC,
@@ -116,6 +69,7 @@ PmStream* prepareMIDI(int i) {
 	while (Pm_Poll(midiStream)) {
 		Pm_Read(midiStream, MIDIbuffer, 1);
 	}
+
 	return midiStream;
 }
 static int generateSignal(const void *inputBuffer, void *outputBuffer,
@@ -125,43 +79,50 @@ static int generateSignal(const void *inputBuffer, void *outputBuffer,
 	void *userData)
 {
 	// funkcja generuje sygna³ i przekazuje go do bufora wyjœciowego
-	synthData* synth = (synthData*)userData;
+	synthData* xMasSynth = (synthData*)userData;
 	float *out = (float*)outputBuffer;
-	//--------------
-	unsigned int i, j, q;
-	float delta[NUM_OF_VOICES];
-	for (i = 0; i < framesPerBuffer; i++)
-	{
-		for (j = 0; j < 2; j++) { // pêtla po kana³ach (w tym przypadku dwóch: lewym i prawym)
-			*out = 0;
-			for (q = 0; q < NUM_OF_VOICES; q++) {
-				// zaktualizuj gain kolejnego g³osu
-				// attack
-				if ((*synth).voice[q].isPlayed && ((*synth).voice[q].gain < 1))
-					(*synth).voice[q].gain += 1 / ((*synth).adsr.attack*44.100f);
-				// release
-				if (!(*synth).voice[q].isPlayed && ((*synth).voice[q].gain > 0))
-					(*synth).voice[q].gain -= 1 / ((*synth).adsr.release*44.100f);
-				
-				// do wartoœci próbki w buforze wyjœciowym dodaj wartoœæ próbki sygna³u generowanego przez q-ty g³os
-				*out = *out + (*synth).signal[q] * (*synth).voice[q].gain;
-			}
-			// przesuñ wskaŸnik na kolejn¹ próbkê w buforze wyjœciowym
-			out++;
-		}
+	unsigned int frame_number, voice_number;
 
-		for (q = 0; q < NUM_OF_VOICES; q++) {
-			// oblicz deltê (czyli jak du¿y jest krok pomiêdzy odczytywanymi próbkami z tabeli - im wiêkszy tym wiêksza czêstotliwoœæ)
-			delta[q] = (*synth).voice[q].frequency;
-			// zaktualizuj sygna³ generowany przez kolejny g³os o zmiksowane sygna³y z generatorów sinusa, pi³y i prostok¹ta
-			(*synth).signal[q] = ((*synth).mix.sin * sinus[(*synth).voice[q].phase] +
-									  (*synth).mix.saw * sawtooth[(*synth).voice[q].phase] +
-									  (*synth).mix.sqr * square[(*synth).voice[q].phase]) / 4;
-			
-			(*synth).voice[q].phase += delta[q];
-			if ((*synth).voice[q].phase > TABLE_SIZE)
-				(*synth).voice[q].phase = 0;
-		}
+	for (frame_number = 0; frame_number < framesPerBuffer; frame_number++)
+	{
+		*out = 0;
+		// Zsumuj g³osy i przepisz je do pierwszego kana³u bufora wyjœciowego
+		for (voice_number = 0; voice_number < NUM_OF_VOICES; voice_number++)
+			*out = *out + xMasSynth->generateOutput(voice_number);
+		// Identyczn¹ wartoœæ próbki wpisz do drugiego kana³u
+		*(++out) = *(out-1);
+		// przesuñ wskaŸnik na kolejn¹ próbkê w buforze wyjœciowym
+		out++;
 	}
 	return 0;
+}
+bool isNoteOn(PmMessage msg) {	return (Pm_MessageStatus(msg) == NOTE_ON) && Pm_MessageData2(msg);}
+bool isNoteOff(PmMessage msg) {	return (Pm_MessageStatus(msg) == NOTE_OFF) || !Pm_MessageData2(msg);}
+int chooseMIDIDevice() {
+	int MIDI_device_number;
+	for (MIDI_device_number = 0; MIDI_device_number < Pm_CountDevices(); MIDI_device_number++) {
+		const PmDeviceInfo *info = Pm_GetDeviceInfo(MIDI_device_number);
+		if (info->input) {
+			cout << MIDI_device_number << ". - " << info->interf << " - " << info->name << "\n";
+		}
+	}
+	cout << "Wybierz urz¹dzenie MIDI: ";
+	cin >> MIDI_device_number;
+
+	return MIDI_device_number;
+}
+PaStream* prepareAudio(synthData &synth) {
+	PaStream *audioStream;
+	Pa_Initialize();
+	Pa_OpenDefaultStream(&audioStream,
+		0,
+		2,
+		paFloat32,
+		44100,
+		128,
+		generateSignal,
+		&synth);
+	Pa_StartStream(audioStream);
+
+	return audioStream;
 }
