@@ -1,9 +1,0 @@
-﻿  SynthData.cpp
-c:\users\ja\documents\visual studio 2013\projects\portmiditest\portmiditest\synth\portmiditest\portmiditest\wavetablegenerators.h(19): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-  Generating Code...
-  Compiling...
-  PortMIDITest.cpp
-c:\users\ja\documents\visual studio 2013\projects\portmiditest\portmiditest\synth\portmiditest\portmiditest\wavetablegenerators.h(19): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-c:\users\ja\documents\visual studio 2013\projects\portmiditest\portmiditest\synth\portmiditest\portmiditest\portmiditest.cpp(10): warning C4305: 'argument' : truncation from 'double' to 'float'
-  Generating Code...
-  PortMIDITest.vcxproj -> C:\Users\Ja\Documents\Visual Studio 2013\Projects\PortMIDITest\PortMIDITest\synth\PortMIDITest\Debug\PortMIDITest.exe
