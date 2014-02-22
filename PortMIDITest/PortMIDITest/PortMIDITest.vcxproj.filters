@@ -27,9 +27,6 @@
     <ClInclude Include="PortMIDITest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SynthData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="WavetableGenerators.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -46,12 +43,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PortMIDITest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="WavetableGenerators.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SynthData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -70,7 +70,6 @@
     <ClInclude Include="..\..\portmidi.h" />
     <ClInclude Include="..\..\porttime.h" />
     <ClInclude Include="PortMIDITest.h" />
-    <ClInclude Include="SynthData.h" />
     <ClInclude Include="WavetableGenerators.h" />
   </ItemGroup>
   <ItemGroup>
@@ -81,8 +80,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="PortMIDITest.cpp" />
-    <ClCompile Include="SynthData.cpp" />
-    <ClCompile Include="WavetableGenerators.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
