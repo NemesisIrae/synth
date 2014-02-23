@@ -18,26 +18,28 @@ int main() {
 	tonalGenerators[0].chooseSignalType(SINUS);
 	tonalGenerators[1].chooseSignalType(SAWTOOTH);
 	tonalGenerators[2].chooseSignalType(SQUARE);
-	tonalGenerators[0].setGain(.15f);
-	tonalGenerators[1].setGain(.1f);
-	tonalGenerators[2].setGain(.2f);
+	tonalGenerators[0].setGain(0);
+	tonalGenerators[1].setGain(.6f);
+	tonalGenerators[2].setGain(.2);
 	tonalGenerators[0].setDetune(.0f);
 	tonalGenerators[1].setDetune(-.1f);
 	tonalGenerators[2].setDetune(.1f);
 	// generator szumu
-	noiseGenerator.setGain(.2);
+	noiseGenerator.setGain(0);
 	// ustawienie parametrów ADSR
 	adsrs[TONAL_GENERATOR].setAttack(10);
 	adsrs[TONAL_GENERATOR].setRelease(1000);
 	adsrs[NOISE_GENERATOR].setAttack(5);
 	adsrs[NOISE_GENERATOR].setRelease(10);
+	adsrs[TONAL_GENERATORS_FILTER].setAttack(10);
+	adsrs[TONAL_GENERATORS_FILTER].setRelease(10);
 
 	// parametry filtrów, mog¹ byæ podane przez interface
 	filterType tonalFilterType, noiseFilterType;
 	float tonalPassbandFrequency, noisePassbandFrequency;
 	tonalFilterType = lowPass;
 	noiseFilterType = lowPass;
-	tonalPassbandFrequency = 1000.0f;
+	tonalPassbandFrequency = 100.0f;
 	noisePassbandFrequency = 400.0f;
 
 	setTonalFilterParameters(tonalFilterType, tonalPassbandFrequency);
@@ -195,7 +197,6 @@ static int fillOutputBuffer(const void *inputBuffer, void *outputBuffer,
 }
 
 // Funkcja generuj¹ca nastêpn¹ próbkê sygna³u
-// TODO: Filtry
 float generateNewSample(int voice_number) {
 	float tonal_sample = 0;
 	float noise_sample = 0;
@@ -228,16 +229,19 @@ float generateNewSample(int voice_number) {
 	noise_sample *= voices[voice_number].gain[NOISE_GENERATOR];
 	voices[voice_number].noiseFilter.updateInSample(noise_sample);
 
-	// 4. Sumowanie próbek sygna³u tonalnego i szumowego i wpisanie aktualnej próbki do bufora poprzednich próbek wejœciowych filtru
-
-
-	// 5. Filtracja 
+	// 4. Filtracja 
+	// uaktualnienie wspó³czynników filtra
+	voices[voice_number].updateGain(TONAL_GENERATORS_FILTER);
+	voices[voice_number].tonalFilter.setPassBandFrequency(voices[voice_number].gain[TONAL_GENERATORS_FILTER]*20000);
+	// voices[voice_number].tonalFilter.setPassBandFrequency(20000.0f);
+	// filtracja w³aœciwa
 	tonal_sample = voices[voice_number].tonalFilter.Filtrate();
 	noise_sample = voices[voice_number].noiseFilter.Filtrate();
-		// wpisanie aktualnej próbki do bufora poprzednich próbek wyjœciowych filtru
+	// wpisanie aktualnej próbki do bufora poprzednich próbek wyjœciowych filtru
 	voices[voice_number].tonalFilter.updateOutSample(tonal_sample);
 	voices[voice_number].noiseFilter.updateOutSample(noise_sample);
 
+	// 5. Sumowanie próbek sygna³u tonalnego i szumowego
 	return tonal_sample + noise_sample;
 }
 

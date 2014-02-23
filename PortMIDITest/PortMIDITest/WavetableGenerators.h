@@ -2,7 +2,7 @@
 #define SINUS 0
 #define SAWTOOTH 1
 #define SQUARE 2
-#define NUMBER_OF_ADSR_DESTINATIONS 2
+#define NUMBER_OF_ADSR_DESTINATIONS 4
 
 #define TABLE_SIZE 44100
 #ifndef M_PI
@@ -133,7 +133,7 @@ public:
 	float velocity;
 	Filter tonalFilter;
 	Filter noiseFilter;
-	float gain[2];	// gain sygna³u tonalnego, szumu
+	float gain[4];	// gain sygna³u tonalnego, szumu, filtru tonalnego, filtru szumu
 	int phases[3];	// fazy dla kolejnych generatorów
 	void updateGain(short destination);
 

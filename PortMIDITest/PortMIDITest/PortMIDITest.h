@@ -15,6 +15,7 @@
 #define FILTER_SIZE 2
 #define TONAL_GENERATOR 0
 #define NOISE_GENERATOR 1
+#define TONAL_GENERATORS_FILTER 2
 
 using namespace std;
 
