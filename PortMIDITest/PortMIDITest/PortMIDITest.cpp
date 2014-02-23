@@ -242,13 +242,82 @@ float generateNewSample(int voice_number) {
 }
 
 bool textInterface() {
-	char letter;
-	cout << "Press q to quit: ";
+	char letter, option;
+	int generator_number, signal_type, destination;
+	float gain, detune, value;
+
+	cout << "Choose option:\n"
+		<< "   q - quit\n"
+		<< "   t - change tonal generators' options\n"
+		<< "   n - change noise generator's options\n"
+		<< "   a - change ADSR generator's options\n";
 	cin >> letter;
-	if (letter == 'q')
+	switch (letter) {
+	case 'q':
 		return 1;
-	else
-		return 0;
+		break;
+	case 't':
+		cout << "   Choose generator's number: ";
+		cin >> generator_number;
+		cout << "\n   Choose option:\n"
+			<< "      s - signal type\n"
+			<< "      g - gain\n"
+			<< "      d - detune\n";
+		cin >> option;
+		switch (option) {
+		case 's':
+			cout << "\n      Choose signal type:\n"
+				<< "         0 - sinus\n"
+				<< "         1 - sawtooth\n"
+				<< "         2 - square\n";
+			cin >> signal_type;
+			tonalGenerators[generator_number].chooseSignalType(signal_type);
+			break;
+		case 'g':
+			cout << "\n      Enter gain: ";
+			cin >> gain;
+			tonalGenerators[generator_number].setGain(gain);
+			break;
+		case 'd':
+			cout << "\n      Enter detune: ";
+			cin >> detune;
+			tonalGenerators[generator_number].setDetune(detune);
+			break;
+		default:
+			break;
+		}
+		break;
+	case 'n':
+		cout << "\n   Enter gain: ";
+		cin >> gain;
+		noiseGenerator.setGain(gain);
+		break;
+	case 'a':
+		cout << "\n   Choose destination:\n"
+			<< "      0 - tonal generators\n"
+			<< "      1 - noise generator";
+		cin >> destination;
+		cout << "\n   Choose option:\n"
+			<< "      a - attack\n"
+			<< "      r - release\n";
+		cin >> option;
+		cout << "Enter value: ";
+		cin >> value;
+		switch (option) {
+		case 'a':
+			adsrs[destination].setAttack(value);
+			break;
+		case 'r':
+			adsrs[destination].setRelease(value);
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+	return 0;
 }
 
 // funkcje ustawiaj¹ce parametry filtrów: tonalnego i szumowego
