@@ -32,20 +32,16 @@ int main() {
 	adsrs[NOISE_GENERATOR].setAttack(5);
 	adsrs[NOISE_GENERATOR].setRelease(10);
 
-	// parametry filtrów
-	voices[0].tonalFilter.setFilterType( lowPass ); 
-	voices[0].tonalFilter.setPassBandFrequency( 400.0f );
-	voices[1].tonalFilter.setFilterType( lowPass );
-	voices[1].tonalFilter.setPassBandFrequency( 400.0f );
-	voices[2].tonalFilter.setFilterType( lowPass );
-	voices[2].tonalFilter.setPassBandFrequency( 400.0f );
+	// parametry filtrów, mog¹ byæ podane przez interface
+	filterType tonalFilterType, noiseFilterType;
+	float tonalPassbandFrequency, noisePassbandFrequency;
+	tonalFilterType = lowPass;
+	noiseFilterType = lowPass;
+	tonalPassbandFrequency = 1000.0f;
+	noisePassbandFrequency = 400.0f;
 
-	voices[0].noiseFilter.setFilterType(lowPass);
-	voices[0].noiseFilter.setPassBandFrequency(400.0f);
-	voices[1].noiseFilter.setFilterType(lowPass);
-	voices[1].noiseFilter.setPassBandFrequency(400.0f);
-	voices[2].noiseFilter.setFilterType(lowPass);
-	voices[2].noiseFilter.setPassBandFrequency(400.0f);
+	setTonalFilterParameters(tonalFilterType, tonalPassbandFrequency);
+	setNoiseFilterParameters(noiseFilterType, noisePassbandFrequency);
 
 	// przygotowanie urz¹dzenia MIDI
 	midiStream = prepareMIDI();
@@ -253,4 +249,23 @@ bool textInterface() {
 		return 1;
 	else
 		return 0;
+}
+
+// funkcje ustawiaj¹ce parametry filtrów: tonalnego i szumowego
+void setTonalFilterParameters(filterType type, float passbandFrequency)
+{
+	for (int i = 0; i < NUM_OF_VOICES; i++)
+	{
+		voices[i].tonalFilter.setFilterType(type);
+		voices[i].tonalFilter.setPassBandFrequency(passbandFrequency);
+	}
+}
+
+void setNoiseFilterParameters(filterType type, float passbandFrequency)
+{
+	for (int i = 0; i < NUM_OF_VOICES; i++)
+	{
+		voices[i].noiseFilter.setFilterType(type);
+		voices[i].noiseFilter.setPassBandFrequency(passbandFrequency);
+	}
 }

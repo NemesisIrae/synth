@@ -53,3 +53,7 @@ static int fillOutputBuffer(const void *inputBuffer, void *outputBuffer,
 
 // Funkcja generuj¹ca nastêpn¹ próbkê sygna³u
 float generateNewSample(int voice_number);
+
+// funkcje ustawiaj¹ce parametry filtrów: tonalnego i szumowego
+void setTonalFilterParameters(filterType type, float passbandFrequency);
+void setNoiseFilterParameters(filterType type, float passbandFrequency);
