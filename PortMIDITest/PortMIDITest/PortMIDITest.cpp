@@ -31,7 +31,7 @@ int main() {
 	adsrs[TONAL_GENERATOR].setRelease(1000);
 	adsrs[NOISE_GENERATOR].setAttack(5);
 	adsrs[NOISE_GENERATOR].setRelease(10);
-	adsrs[TONAL_GENERATORS_FILTER].setAttack(10);
+	adsrs[TONAL_GENERATORS_FILTER].setAttack(1000);
 	adsrs[TONAL_GENERATORS_FILTER].setRelease(10);
 
 	// parametry filtrów, mog¹ byæ podane przez interface
@@ -232,7 +232,7 @@ float generateNewSample(int voice_number) {
 	// 4. Filtracja 
 	// uaktualnienie wspó³czynników filtra
 	voices[voice_number].updateGain(TONAL_GENERATORS_FILTER);
-	voices[voice_number].tonalFilter.setPassBandFrequency(voices[voice_number].gain[TONAL_GENERATORS_FILTER]*20000);
+	voices[voice_number].tonalFilter.setPassBandFrequency(voices[voice_number].gain[TONAL_GENERATORS_FILTER]*2000);
 	// voices[voice_number].tonalFilter.setPassBandFrequency(20000.0f);
 	// filtracja w³aœciwa
 	tonal_sample = voices[voice_number].tonalFilter.Filtrate();
