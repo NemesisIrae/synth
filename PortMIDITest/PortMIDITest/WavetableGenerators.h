@@ -13,7 +13,6 @@ enum filterType
 	noFilter,
 	lowPass,
 	highPass
-	// jakieœ jeszcze?
 };
 
 // TABLICE Z SYGNA£AMI

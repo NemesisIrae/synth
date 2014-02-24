@@ -41,7 +41,7 @@ int main() {
 	lfo.setFrequency(2.0f);
 	lfo.setGain(1.0f);
 
-	// parametry filtrów, mog¹ byæ podane przez interface
+	// parametry filtrów
 	filterType tonalFilterType, noiseFilterType;
 	float tonalPassbandFrequency, noisePassbandFrequency;
 	tonalFilterType = lowPass;
@@ -238,9 +238,9 @@ float generateNewSample(int voice_number) {
 
 	// 4. Filtracja 
 	// uaktualnienie wspó³czynników filtra
-	voices[voice_number].updateGain(TONAL_GENERATORS_FILTER);
-	voices[voice_number].tonalFilter.setPassBandFrequency(voices[voice_number].gain[TONAL_GENERATORS_FILTER]*2000);
-	// voices[voice_number].tonalFilter.setPassBandFrequency(20000.0f);
+	// voices[voice_number].updateGain(TONAL_GENERATORS_FILTER);
+	// voices[voice_number].tonalFilter.setPassBandFrequency(voices[voice_number].gain[TONAL_GENERATORS_FILTER]*2000);
+	
 	// filtracja w³aœciwa
 	tonal_sample = voices[voice_number].tonalFilter.Filtrate();
 	noise_sample = voices[voice_number].noiseFilter.Filtrate();
@@ -260,14 +260,15 @@ float generateNewSample(int voice_number) {
 bool textInterface() {
 	char letter, option;
 	int generator_number, signal_type, destination;
-	float gain, detune, value;
-
+	float gain, detune, value, frequency;
+	filterType filterType;
 	cout << "Choose option:\n"
 		<< "   q - quit\n"
 		<< "   t - change tonal generators' options\n"
 		<< "   n - change noise generator's options\n"
 		<< "   a - change ADSR generator's options\n"
-		<< "   l - change amplitude LFO's options\n";
+		<< "   l - change amplitude LFO's options\n"
+		<< "   f - change filter parameters\n";
 	cin >> letter;
 	switch (letter) {
 	case 'q':
@@ -355,6 +356,28 @@ bool textInterface() {
 			cout << "\n      Enter frequency: ";
 			cin >> value;
 			lfo.setFrequency(value);
+			break;
+		default:
+			break;
+		}
+	case 'f':
+		cout << "   Choose filter:\n "
+			<< "      t - tonal generators' filter\n"
+			<< "      n - noise generator's filter\n";
+		cin >> option;
+		switch (option)
+		{
+		case 't':
+			filterType = lowPass;
+			cout << "      Enter frequency: ";
+			cin >> frequency;
+			setTonalFilterParameters(filterType, frequency);
+			break;
+		case 'n':
+			filterType = lowPass;
+			cout << "      Enter frequency: ";
+			cin >> frequency;
+			setNoiseFilterParameters(filterType, frequency);
 			break;
 		default:
 			break;
