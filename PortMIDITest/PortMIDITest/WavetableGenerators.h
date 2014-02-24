@@ -62,6 +62,30 @@ public:
 // PARAMETRY GENERATORÓW SYGNA£U SZUMOWEGO (DZIEDZICZY z generatorParameters)
 class noiseGeneretorParameters : public generatorParameters {};
 
+// LFO
+class LFO : public generatorParameters
+{
+public:
+	void setFrequency(float frequency) { _frequency = frequency; }
+	void setPhase(int phase) { _phase = phase; }
+	int getPhase() { return _phase; }
+	void updatePhase()
+	{
+		_phase = (_phase + (int)_frequency) % 44100;
+	}
+	float wavetable[TABLE_SIZE];
+	void chooseSignalType(int t)
+	{
+		for (int i = 0; i<TABLE_SIZE; i++)
+			wavetable[i] = *(waveTables.getTable(t) + i) + 1.0f;
+	}
+
+private:
+	float _frequency = 0.0f;
+	int _phase = 0;
+};
+
+
 // FILTRY
 class Filter
 {

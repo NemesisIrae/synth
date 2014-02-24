@@ -6,6 +6,8 @@ tonalGeneratorParameters tonalGenerators[3];
 noiseGeneretorParameters noiseGenerator;
 // INICJALIZACJA TABLICY G£OSÓW
 voice voices[NUM_OF_VOICES];
+// INICJALIZACJA LFO
+LFO lfo;
 
 int main() {
 	PmStream * midiStream;
@@ -15,15 +17,15 @@ int main() {
 
 	// USTAWIENIE PARAMETRÓW SYNTEZATORA
 	// generatory tonalne
-	tonalGenerators[0].chooseSignalType(SINUS);
-	tonalGenerators[1].chooseSignalType(SAWTOOTH);
+	tonalGenerators[0].chooseSignalType(SQUARE);
+	tonalGenerators[1].chooseSignalType(SQUARE);
 	tonalGenerators[2].chooseSignalType(SQUARE);
-	tonalGenerators[0].setGain(0);
-	tonalGenerators[1].setGain(.6f);
-	tonalGenerators[2].setGain(.2);
+	tonalGenerators[0].setGain(.2f);
+	tonalGenerators[1].setGain(.2f);
+	tonalGenerators[2].setGain(.2f);
 	tonalGenerators[0].setDetune(.0f);
-	tonalGenerators[1].setDetune(-.1f);
-	tonalGenerators[2].setDetune(.1f);
+	tonalGenerators[1].setDetune(-12.1f);
+	tonalGenerators[2].setDetune(-12.0f);
 	// generator szumu
 	noiseGenerator.setGain(0);
 	// ustawienie parametrów ADSR
@@ -34,12 +36,17 @@ int main() {
 	adsrs[TONAL_GENERATORS_FILTER].setAttack(10);
 	adsrs[TONAL_GENERATORS_FILTER].setRelease(10);
 
+	// LFO
+	lfo.chooseSignalType(0);
+	lfo.setFrequency(2.0f);
+	lfo.setGain(1.0f);
+
 	// parametry filtrów, mog¹ byæ podane przez interface
 	filterType tonalFilterType, noiseFilterType;
 	float tonalPassbandFrequency, noisePassbandFrequency;
 	tonalFilterType = lowPass;
 	noiseFilterType = lowPass;
-	tonalPassbandFrequency = 100.0f;
+	tonalPassbandFrequency = 80.0f;
 	noisePassbandFrequency = 400.0f;
 
 	setTonalFilterParameters(tonalFilterType, tonalPassbandFrequency);
@@ -241,8 +248,13 @@ float generateNewSample(int voice_number) {
 	voices[voice_number].tonalFilter.updateOutSample(tonal_sample);
 	voices[voice_number].noiseFilter.updateOutSample(noise_sample);
 
-	// 5. Sumowanie próbek sygna³u tonalnego i szumowego
-	return tonal_sample + noise_sample;
+	// 5. LFO na amplitudzie
+	out_sample = tonal_sample + noise_sample;
+	out_sample *= lfo.wavetable[lfo.getPhase()];
+	lfo.updatePhase();
+
+	// 6. Sumowanie próbek sygna³u tonalnego i szumowego
+	return out_sample;
 }
 
 bool textInterface() {
@@ -254,7 +266,8 @@ bool textInterface() {
 		<< "   q - quit\n"
 		<< "   t - change tonal generators' options\n"
 		<< "   n - change noise generator's options\n"
-		<< "   a - change ADSR generator's options\n";
+		<< "   a - change ADSR generator's options\n"
+		<< "   l - change amplitude LFO's options\n";
 	cin >> letter;
 	switch (letter) {
 	case 'q':
@@ -318,6 +331,34 @@ bool textInterface() {
 			break;
 		}
 		break;
+	case 'l':
+		cout << "   Choose LFO option:\n "
+			<< "      s - signal type\n"
+			<< "      g - gain\n"
+			<< "      f - frequency\n";
+		cin >> option;
+		switch (option) {
+		case 's':
+			cout << "\n      Choose signal type:\n"
+				<< "         0 - sinus\n"
+				<< "         1 - sawtooth\n"
+				<< "         2 - square\n";
+			cin >> signal_type;
+			lfo.chooseSignalType(signal_type);
+			break;
+		case 'g':
+			cout << "\n      Enter gain: ";
+			cin >> gain;
+			lfo.setGain(gain);
+			break;
+		case 'f':
+			cout << "\n      Enter frequency: ";
+			cin >> value;
+			lfo.setFrequency(value);
+			break;
+		default:
+			break;
+		}
 	default:
 		break;
 	}
